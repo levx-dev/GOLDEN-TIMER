@@ -1,1 +1,110 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GOLDEN TIME</title>
+<style>
+:root{--bg:#090909;--panel:#141414;--gold:#d9b45b;--muted:#aaa;--line:#29251b;--red:#e87a7a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#332914 0,transparent 45%),var(--bg);color:#f5f1e8;font-family:Tahoma,Arial,sans-serif}
+button,input,textarea,select{font:inherit}button{cursor:pointer}
+header{position:sticky;top:0;z-index:3;background:#0b0b0bee;border-bottom:1px solid var(--line);padding:15px 5%;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:20px;color:var(--gold);font-weight:bold;letter-spacing:2px}
+nav{display:flex;gap:7px;overflow:auto;padding:10px 5%;border-bottom:1px solid var(--line)}
+nav button,.btn{border:1px solid #514323;background:#19170f;color:var(--gold);border-radius:10px;padding:9px 13px;white-space:nowrap}
+nav button.active,.btn.primary{background:var(--gold);color:#17130a}
+main{max-width:1100px;margin:25px auto;padding:0 16px}.page{display:none}.page.active{display:block}
+h1,h2{font-weight:500}h1{font-size:26px;color:var(--gold)}h2{font-size:19px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.card{background:linear-gradient(145deg,#191919,#101010);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 10px 30px #0005}
+.big{font-size:32px;color:var(--gold);margin:8px 0}.muted{color:var(--muted);font-size:13px}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:12px 0}
+input,textarea,select{width:100%;background:#0d0d0d;color:#f5f1e8;border:1px solid #39342a;border-radius:9px;padding:11px}
+textarea{min-height:80px;resize:vertical}.wide{grid-column:1/-1}
+.item{border-top:1px solid var(--line);padding:12px 0;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.item small{display:block;color:var(--muted);margin-top:5px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.actions button{border:1px solid #49402c;background:#17150f;color:var(--gold);border-radius:8px;padding:7px 9px}
+.danger{color:var(--red)!important}.alarm-screen{position:fixed;inset:0;background:#090909f5;z-index:10;display:none;place-items:center;text-align:center;padding:20px}
+.alarm-screen.open{display:grid}.alarm-box{max-width:460px;width:100%;padding:28px;border:1px solid var(--gold);border-radius:18px;background:#15130e}
+progress{width:100%;accent-color:var(--gold)}footer{color:#777;text-align:center;padding:30px;font-size:12px}
+@media(max-width:600px){header{padding:13px 16px}.brand{font-size:17px}main{margin-top:15px}}
+</style>
+</head>
+<body>
+<header><div class="brand">✦ GOLDEN TIME</div><div id="headerClock" class="muted"></div></header>
+<nav id="nav"></nav>
+<main>
+<section id="home" class="page active">
+<h1>مساحتك لتنظيم يومك</h1>
+<div class="grid">
+ <div class="card"><div class="muted">الوقت الآن</div><div id="clock" class="big">--:--:--</div><div id="date" class="muted"></div></div>
+ <div class="card"><div class="muted">أقرب منبه</div><div id="nextAlarm" class="big">لا يوجد</div><div id="countdown" class="muted"></div></div>
+ <div class="card"><div class="muted">إنجاز مهام اليوم</div><div id="progressText" class="big">0%</div><progress id="progress" value="0" max="100"></progress></div>
+</div>
+<div class="card"><h2>المهام القادمة</h2><div id="homeTasks"></div></div>
+</section>
+<section id="alarms" class="page"><h1>المنبهات</h1>
+<div class="card"><h2>إضافة منبه</h2>
+<form id="alarmForm">
+<input name="title" placeholder="عنوان المنبه" required>
+<input name="datetime" type="datetime-local" required>
+<select name="repeat"><option value="once">مرة واحدة</option><option value="daily">يومياً</option></select>
+<select name="sound"><option value="beep">نغمة افتراضية</option><option value="custom">ملف صوتي مخصص</option></select>
+<input name="audio" type="file" accept="audio/*" aria-label="ملف صوتي">
+<button class="btn primary">حفظ المنبه</button>
+</form></div><div class="card"><h2>منبهاتي</h2><div id="alarmsList"></div></div>
+</section>
+<section id="timer" class="page"><h1>المؤقت والدراسة</h1><div class="card">
+<form id="timerForm"><input name="task" placeholder="اسم جلسة الدراسة"><input name="mins" type="number" min="1" value="25" placeholder="المدة بالدقائق"><button class="btn primary">بدء المؤقت</button></form>
+<div class="big" id="timerDisplay">25:00</div><div class="actions"><button id="pauseTimer">إيقاف مؤقت</button><button id="resetTimer">إعادة ضبط</button></div>
+<p class="muted">عند انتهاء المؤقت يصدر تنبيه صوتي ما دامت الصفحة مفتوحة.</p></div></section>
+<section id="notes" class="page"><h1>المذكرات والمهام</h1><div class="card"><h2>إضافة ملاحظة أو مهمة</h2>
+<form id="noteForm"><input name="title" placeholder="العنوان" required><select name="kind"><option>مهمة</option><option>ملاحظة</option><option>هدف</option><option>كتاب</option></select><select name="priority"><option>عادية</option><option>مهمة</option><option>عالية</option></select><textarea class="wide" name="body" placeholder="التفاصيل (اختياري)"></textarea><button class="btn primary">حفظ</button></form></div>
+<div class="card"><input id="search" placeholder="ابحث في مذكراتك"><div id="notesList"></div></div></section>
+<section id="prayer" class="page"><h1>مواقيت الصلاة</h1><div class="card"><p class="muted">أدخل المدينة والبلد لجلب المواقيت اليومية من خدمة مواقيت خارجية. يلزم اتصال بالإنترنت.</p>
+<form id="prayerForm"><input name="city" placeholder="المدينة" required><input name="country" placeholder="البلد" required><button class="btn primary">تحديث المواقيت</button></form><div id="prayerStatus" class="muted"></div><div id="prayerTimes"></div></div></section>
+<section id="settings" class="page"><h1>الإعدادات</h1><div class="card"><h2>البيانات والتنبيهات</h2><p>البيانات محفوظة على هذا الجهاز فقط. امنح إذن الإشعارات لتفعيل إشعارات المتصفح عندما تكون الصفحة مفتوحة.</p><div class="actions"><button id="notifyBtn">تفعيل الإشعارات</button><button id="exportBtn">تصدير البيانات</button><button id="clearBtn" class="danger">حذف كل البيانات</button></div><p class="muted">واتساب: غير متصل. يتطلب خادماً آمناً وتكامل WhatsApp Business Cloud API؛ لا تُدخل رموز API في هذه الصفحة.</p></div></section>
+</main>
+<div id="alarmScreen" class="alarm-screen"><div class="alarm-box"><h1 id="ringTitle">حان وقت المنبه</h1><div id="ringClock" class="big"></div><div class="actions" style="justify-content:center"><button onclick="snooze(5)">غفوة 5 د</button><button onclick="snooze(10)">غفوة 10 د</button><button onclick="snooze(15)">غفوة 15 د</button><button class="danger" onclick="confirmStop()">إيقاف</button></div></div></div>
+<footer>GOLDEN TIME · تنظيم يومك يبدأ بخطوة</footer>
+<script>
+const tabs=[["home","الرئيسية"],["alarms","المنبهات"],["timer","المؤقت"],["notes","المذكرات والمهام"],["prayer","الصلاة"],["settings","الإعدادات"]];
+const nav=document.querySelector("#nav");
+tabs.forEach(([id,label],i)=>{let b=document.createElement("button");b.textContent=label;b.onclick=()=>show(id,b);if(!i)b.classList.add("active");nav.append(b)});
+function show(id,b){document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");nav.querySelectorAll("button").forEach(x=>x.classList.remove("active"));b.classList.add("active")}
+const get=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}},set=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+let alarms=get("gt_alarms"),notes=get("gt_notes"),ringing=null,tick=null;
+function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function render(){
+ document.querySelector("#alarmsList").innerHTML=alarms.map((a,i)=>`<div class="item"><div>${esc(a.title)}<small>${new Date(a.at).toLocaleString("ar")} · ${a.repeat==="daily"?"يومي":"مرة واحدة"} ${a.enabled?"":"· متوقف"}</small></div><div class="actions"><button onclick="toggleAlarm(${i})">${a.enabled?"إيقاف":"تشغيل"}</button><button onclick="delAlarm(${i})">حذف</button></div></div>`).join("")||'<p class="muted">لا توجد منبهات.</p>';
+ const filtered=notes.filter(n=>(n.title+n.body+n.kind).includes(document.querySelector("#search").value));
+ document.querySelector("#notesList").innerHTML=filtered.map(n=>`<div class="item"><label><input type="checkbox" ${n.done?"checked":""} onchange="toggleNote('${n.id}')"> ${esc(n.title)} <small>${esc(n.kind)} · أولوية ${esc(n.priority)} · ${new Date(n.created).toLocaleDateString("ar")}</small><small>${esc(n.body)}</small></label><button onclick="delNote('${n.id}')">حذف</button></div>`).join("")||'<p class="muted">لا توجد عناصر بعد.</p>';
+ const today=notes.filter(n=>n.kind==="مهمة"),done=today.filter(n=>n.done).length,pct=today.length?Math.round(done/today.length*100):0;
+ document.querySelector("#progress").value=pct;document.querySelector("#progressText").textContent=pct+"%";
+ document.querySelector("#homeTasks").innerHTML=today.filter(n=>!n.done).slice(0,5).map(n=>`<div class="item">${esc(n.title)}<small>${esc(n.priority)} الأولوية</small></div>`).join("")||'<p class="muted">لا توجد مهام معلقة.</p>';
+ set("gt_alarms",alarms);set("gt_notes",notes);updateNext();
+}
+document.querySelector("#alarmForm").onsubmit=e=>{e.preventDefault();let f=new FormData(e.target),file=f.get("audio");let alarm={title:f.get("title"),at:new Date(f.get("datetime")).getTime(),repeat:f.get("repeat"),enabled:true,sound:f.get("sound"),audio:null};if(file?.size){let r=new FileReader();r.onload=()=>{alarm.audio=r.result;alarms.push(alarm);render()};r.readAsDataURL(file)}else{alarms.push(alarm);render()}e.target.reset()};
+function delAlarm(i){alarms.splice(i,1);render()}function toggleAlarm(i){alarms[i].enabled=!alarms[i].enabled;render()}
+document.querySelector("#noteForm").onsubmit=e=>{e.preventDefault();let f=new FormData(e.target);notes.unshift({id:crypto.randomUUID(),title:f.get("title"),kind:f.get("kind"),priority:f.get("priority"),body:f.get("body"),created:Date.now(),done:false});e.target.reset();render()};
+function toggleNote(id){let n=notes.find(x=>x.id===id);if(n)n.done=!n.done;render()}function delNote(id){notes=notes.filter(x=>x.id!==id);render()}
+document.querySelector("#search").oninput=render;
+function updateClock(){let d=new Date();document.querySelector("#clock").textContent=d.toLocaleTimeString("ar",{hour12:true});document.querySelector("#headerClock").textContent=d.toLocaleDateString("ar",{weekday:"long",day:"numeric",month:"long"});document.querySelector("#date").textContent=d.toLocaleDateString("ar",{year:"numeric",month:"long",day:"numeric"});document.querySelector("#ringClock").textContent=d.toLocaleTimeString("ar")}
+function nextTime(a){let d=new Date(a.at);if(a.repeat==="daily"&&d<=Date.now())d.setDate(d.getDate()+Math.ceil((Date.now()-d.getTime()+1000)/86400000));return d}
+function updateNext(){let upcoming=alarms.filter(a=>a.enabled).map(a=>({a,d:nextTime(a)})).sort((x,y)=>x.d-y.d)[0];document.querySelector("#nextAlarm").textContent=upcoming?upcoming.d.toLocaleTimeString("ar",{hour:"2-digit",minute:"2-digit"}):"لا يوجد";document.querySelector("#countdown").textContent=upcoming?"القادم: "+upcoming.a.title:"أضف منبهاً من صفحة المنبهات"}
+function playAlarm(a){ringing=a;document.querySelector("#ringTitle").textContent=a.title;document.querySelector("#alarmScreen").classList.add("open");if(a.audio){let au=new Audio(a.audio);au.loop=true;au.play().catch(()=>beep())}else beep();if(Notification.permission==="granted")new Notification("GOLDEN TIME",{body:a.title})}
+function beep(){try{let c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=750;g.gain.value=.15;o.start();setTimeout(()=>{o.stop();c.close()},800)}catch{}}
+function checkAlarms(){let now=Date.now();alarms.forEach(a=>{if(a.enabled&&!a.fired&&Math.abs(a.at-now)<1100){a.fired=true;if(a.repeat==="daily")a.at+=86400000;playAlarm(a)}});set("gt_alarms",alarms)}
+function snooze(min){document.querySelector("#alarmScreen").classList.remove("open");if(ringing){alarms.push({...ringing,title:ringing.title+" — غفوة",at:Date.now()+min*60000,repeat:"once",enabled:true,fired:false});ringing=null;render()}}
+function confirmStop(){if(confirm("هل أنت متأكد أنك تريد إيقاف المنبه؟")){let why=prompt("ما سبب إيقاف المنبه؟\\nاكتب: أنجزت المهمة، لدي ظرف طارئ، أحتاج إلى التأجيل، أو سبب آخر","أنجزت المهمة");if(why!==null){let log=get("gt_log");log.push({title:ringing?.title,reason:why,at:Date.now()});set("gt_log",log);document.querySelector("#alarmScreen").classList.remove("open");ringing=null}}}
+document.querySelector("#notifyBtn").onclick=async()=>{if(!("Notification"in window))return alert("متصفحك لا يدعم الإشعارات.");let p=await Notification.requestPermission();alert(p==="granted"?"تم تفعيل الإشعارات.":"لم يتم منح إذن الإشعارات.")};
+let remaining=0,interval=null;document.querySelector("#timerForm").onsubmit=e=>{e.preventDefault();let f=new FormData(e.target);remaining=Number(f.get("mins"))*60;clearInterval(interval);interval=setInterval(()=>{if(remaining>0){remaining--;document.querySelector("#timerDisplay").textContent=String(Math.floor(remaining/60)).padStart(2,"0")+":"+String(remaining%60).padStart(2,"0")}else{clearInterval(interval);beep();alert("انتهى وقت المؤقت")}},1000)};
+document.querySelector("#pauseTimer").onclick=()=>{clearInterval(interval)};document.querySelector("#resetTimer").onclick=()=>{clearInterval(interval);remaining=0;document.querySelector("#timerDisplay").textContent="25:00"};
+document.querySelector("#prayerForm").onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target),status=document.querySelector("#prayerStatus"),out=document.querySelector("#prayerTimes");status.textContent="جارٍ جلب المواقيت…";out.innerHTML="";try{let url=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(f.get("city"))}&country=${encodeURIComponent(f.get("country"))}&method=3`;let r=await fetch(url);if(!r.ok)throw Error();let j=await r.json();if(j.code!==200)throw Error();let t=j.data.timings;status.textContent=`مواقيت ${f.get("city")} · ${j.data.date.readable}`;out.innerHTML=["Fajr","Dhuhr","Asr","Maghrib","Isha"].map((k,i)=>`<div class="item">${["الفجر","الظهر","العصر","المغرب","العشاء"][i]}<span class="big" style="font-size:20px">${esc(t[k])}</span></div>`).join("")}catch{status.textContent="تعذر جلب المواقيت. تحقق من المدينة والبلد والاتصال بالإنترنت."}};
+document.querySelector("#exportBtn").onclick=()=>{let blob=new Blob([JSON.stringify({alarms,notes,log:get("gt_log")},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="golden-time-data.json";a.click();URL.revokeObjectURL(a.href)};
+document.querySelector("#clearBtn").onclick=()=>{if(confirm("حذف كل بيانات GOLDEN TIME من هذا المتصفح؟")){localStorage.removeItem("gt_alarms");localStorage.removeItem("gt_notes");localStorage.removeItem("gt_log");alarms=[];notes=[];render()}};
+setInterval(()=>{updateClock();checkAlarms()},1000);updateClock();render();
+</script>
+</body>
+</html>
 
